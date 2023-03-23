@@ -365,28 +365,28 @@ code {
           : 'default'
     });
   </script>
-<h1 id="rexs-scan-control-project">REXS scan control project</h1>
+<h1 id="beamspotsize-scan-project">BeamSpotSize Scan Project</h1>
 <h2 id="font-colorff5722introductionfont"><font color=#ff5722>Introduction</font></h2>
-<p><strong>This is a user interface program for data scan control at the REXS and RXES endstation of  Energy-line Beamline20U2@SSRF</strong></p>
+<p><strong>This is a user interface program to acquire the  Size of BeamSpot at SSRF BL09U-ARPES endstation</strong></p>
 <h2 id="font-colorff3d00developerfont"><font color=#ff3d00>Developer</font></h2>
 <p><font color=#00b8d4><strong>LiminZhou @SSRF20U</strong></font></p>
 <h2 id="font-colorff5722contact-authorfont"><font color=#ff5722>Contact Author</font></h2>
 <p>Email: zlmturnout@hotmail.com</p>
 <p>Github page: <em>https://github.com/zlmturnout</em></p>
 <h2 id="font-colorff5722copyrightfont"><font color=#ff5722>Copyright</font></h2>
-<p>Full code are hosted on Github repository: <em>https://github.com/zlmturnout/REXS_SCANControl</em></p>
-<p>Copyright (c) 2022 LiminZhou/zlmturnout</p>
+<p>Full code are hosted on Github repository: <em>https://github.com/zlmturnout/ARPES_BeamSpotSize</em></p>
+<p>Copyright (c) 2023 LiminZhou/zlmturnout</p>
 <p><font color=#00e5ff> Please Contact the Author for Any Usage</font></p>
 <h2 id="font-color2962ffbasic-strategyfont"><font color=#2962ff>Basic Strategy</font></h2>
 <ol>
-<li>python+pyepics+Qt6+matplotlib</li>
+<li>Python+Qt6+Matplotlib+SciPy+Pandas+Sqlite</li>
 </ol>
 <h2 id="font-color2962ffmain-purposefont"><font color=#2962ff>Main Purpose</font></h2>
 <ol>
-<li>control motor move in X-ray diffractometer</li>
-<li>acquire the PD current to optimize the spectrometer and sample position</li>
-<li>obtain the diffraction patterns by CCD</li>
-<li>Data prepocessed</li>
+<li>control motor move of motion manipulator</li>
+<li>acquire the PD current at different position</li>
+<li>obtain the I_vs_pos plot</li>
+<li>fit gauss peak to obtain the beamspot size by First Derivative of the I_vs_pos line</li>
 <li>save all processed data into multiple file types (xlsx,csv,txt,sqlitebase)</li>
 </ol>
 

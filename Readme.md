@@ -1,4 +1,4 @@
-# REXS scan control project
+# BeamSpotSize Scan Project
 
 ## <font color=#ff5722>Introduction</font>
 
@@ -18,13 +18,13 @@ Github page: *https://github.com/zlmturnout*
 
 Full code are hosted on Github repository: *https://github.com/zlmturnout/ARPES_BeamSpotSize*
 
-Copyright (c) 2022 LiminZhou/zlmturnout
+Copyright (c) 2023 LiminZhou/zlmturnout
 
 <font color=#00e5ff> Please Contact the Author for Any Usage</font>
 
 ## <font color=#2962ff>Basic Strategy</font>
 
-1. python+pyepics+Qt6+matplotlib
+1. Python+Qt6+Matplotlib+SciPy+Pandas+Sqlite
 
 ## <font color=#2962ff>Main Purpose</font>
 

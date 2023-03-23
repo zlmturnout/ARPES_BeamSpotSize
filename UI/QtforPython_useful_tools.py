@@ -36,6 +36,7 @@ class RunQThread(QThread):
             except Exception as e:
                 # print(e)
                 error_info = traceback.format_exc() + str(e) + '\n'
+                print(error_info)
                 self.run_sig.emit([error_info])
             else:
                 self.run_flag = False

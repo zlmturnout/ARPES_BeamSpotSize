@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>../icons/Beamspotsize_120.png</file>
+  </qresource>
+</RCC>
