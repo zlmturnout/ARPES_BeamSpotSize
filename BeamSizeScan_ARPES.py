@@ -600,40 +600,43 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             data="{\"Index\":%d,\"Destination\":%f}" %(axis_num,set_pos)
             cmd_move={"command":move_cd,"data":data}
             move_msg=json.dumps(cmd_move)
-            sendbytes=self.ws_client.sendTextMessage(move_msg)
-            print(sendbytes)
-            #set timeout for mortor motion
-            timeout=abs(set_pos-curr_axis_pos)*0.6+10
-            while set_flag and time.monotonic()-t0<timeout:
-                new_pos=self.all_motor_status['Position'][axis_num]
-                new_status=self.all_motor_status['MoveFlag'][axis_num]
-                if abs(set_pos-new_pos)<0.1 and not new_status:
-                    # motor motion has stoped
-                    set_flag=False
-                    set_info="done"
-                else:
-                    pass
-            # jump out time
-            used_time=time.monotonic() - t0
-            print(f"set axis position done after: {used_time:.2f}s with timeout of {timeout}s\n"
-                f"average time:{used_time/abs(set_pos-curr_axis_pos):0.3f}")
-            #info = [new_pos, set_pos, axis_num, set_info] 
-        else:
-            print(f'Motionmotor not connected')
-        info = [new_pos, set_pos, axis_num, set_info]
-        print(info)
-        return info
+            self.ws_client.sendTextMessage(move_msg)
+            
+        #     #set timeout for mortor motion
+        #     timeout=abs(set_pos-curr_axis_pos)*0.6+10
+        #     while set_flag and time.monotonic()-t0<timeout:
+        #         new_pos=self.all_motor_status['Position'][axis_num]
+        #         new_status=self.all_motor_status['MoveFlag'][axis_num]
+        #         if abs(set_pos-new_pos)<0.1 and not new_status:
+        #             # motor motion has stoped
+        #             set_flag=False
+        #             set_info="done"
+        #         else:
+        #             pass
+        #     # jump out time
+        #     used_time=time.monotonic() - t0
+        #     print(f"set axis position done after: {used_time:.2f}s with timeout of {timeout}s\n"
+        #         f"average time:{used_time/abs(set_pos-curr_axis_pos):0.3f}")
+        #     #info = [new_pos, set_pos, axis_num, set_info] 
+        # else:
+        #     print(f'Motionmotor not connected')
+        # info = [new_pos, set_pos, axis_num, set_info]
+        # print(info)
+        # return info
     
     @log_exceptions(log_func=logger.error)
     @Slot()
     def on_Clear_Save_clicked(self):
         axis_num=0
         set_pos=10
+        #axis_name=self.all_axis[axis_num]
+        #self.axis_target_input[axis_name].setValue(set_pos)
+        #self.move_axis_motor(axis_name)
         print(f'set axis{self.all_axis[axis_num]} to {set_pos}')
-        #self.set_motor_position(axis_num,set_pos)
-        self.MotorSetThread=MotionMotorWsThread(axis_num,set_pos)
-        self.MotorSetThread.done_sig.connect(self.motor_set_done)
-        self.MotorSetThread.start()
+        self.set_motor_position(axis_num,set_pos)
+        #self.MotorSetThread=MotionMotorWsThread(axis_num,set_pos)
+        #self.MotorSetThread.done_sig.connect(self.motor_set_done)
+        #self.MotorSetThread.start()
     
     def motor_set_done(self,done_info:list):
         """_summary_
@@ -889,7 +892,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         if cmd[0] == 'OK':
             # set axis position
             #self.pmc_motor.set_pos(str(self.scan_ch_num),self._scan_list[self._scan_N])
-            self.pmcsetQThread = pmcSetThread(self.pmc_motor,ch_num=self.scan_ch_num, pos=self._scan_list[self._scan_N],num=1)
+            #self.pmcsetQThread = pmcSetThread(self.pmc_motor,ch_num=self.scan_ch_num, pos=self._scan_list[self._scan_N],num=1)
             self.pmcsetQThread.done_signal.connect(self.pmc_set_done)
             self.pmcsetQThread.start()
 
