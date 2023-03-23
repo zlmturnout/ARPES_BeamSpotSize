@@ -76,6 +76,8 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
     """
     scan_info_sig = Signal(dict)
     scan_start_sig = Signal(list)
+    set_motor_done_sig=Signal(list)
+
     def __init__(self, parent=None):
         super(BeamSpotScanControl,self).__init__(parent)
         self.setupUi(self)
@@ -109,13 +111,13 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         # open data file
         OpenDATA = QAction('open data(&O)...', self)
         OpenDATA.setIcon(style.standardIcon(QStyle.SP_DialogOpenButton))
-        OpenDATA.setShortcut(Qt.CTRL + Qt.Key_O)
+        OpenDATA.setShortcut(Qt.CTRL | Qt.Key_O)
         OpenDATA.triggered.connect(self.open_datafile)
         self.menuMenu.addAction(OpenDATA)
         # save data
         SaveDATA = QAction('save data(&S)...', self)
         SaveDATA.setIcon(style.standardIcon(QStyle.SP_DialogSaveButton))
-        SaveDATA.setShortcut(Qt.CTRL + Qt.Key_S)
+        SaveDATA.setShortcut(Qt.CTRL | Qt.Key_S)
         SaveDATA.triggered.connect(self.save_all_data)
         self.menuMenu.addAction(SaveDATA)
         # show View data in analysis menuBar
@@ -434,9 +436,9 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             # plot the data [value,delays]
             plot_delay = self._MT_pA_delay
             plot_read = self._MT_pA_currents
-            if len(self._MT_pA_currents) > 200:
-                plot_delay = self._MT_pA_delay[-200:]
-                plot_read = self._MT_pA_currents[-200:]
+            if len(self._MT_pA_currents) > 500:
+                plot_delay = self._MT_pA_delay[-500:]
+                plot_read = self._MT_pA_currents[-500:]
             # plot
             self.pAmeter_figure.axes.cla()
             self.pAmeter_figure.axes.plot(plot_delay, plot_read, '-oc', markersize=1)
@@ -587,42 +589,18 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             _type_: _description_
         """
         # current pos and motor status[True,False]
-        t0=time.monotonic()
-        set_info="notSet"
+        
         curr_axis_pos=self.all_motor_status['Position'][axis_num]
-        new_pos=curr_axis_pos
         axis_motor_status=self.all_motor_status['MoveFlag'][axis_num]
         print(f'axis {self.all_axis[axis_num]} status:{axis_motor_status}')
-        if self.connect_status_flag:
-            set_flag=True
-            print(f'Move X from {curr_axis_pos} to target pos:{set_pos}')
+        if self.connect_status_flag and self._scan_motor_axis_flag:
+            print(f'Move axis {self.all_axis[axis_num]} from {curr_axis_pos} to target pos:{set_pos}')
             move_cd="MOVE"
             data="{\"Index\":%d,\"Destination\":%f}" %(axis_num,set_pos)
             cmd_move={"command":move_cd,"data":data}
             move_msg=json.dumps(cmd_move)
             self.ws_client.sendTextMessage(move_msg)
             
-        #     #set timeout for mortor motion
-        #     timeout=abs(set_pos-curr_axis_pos)*0.6+10
-        #     while set_flag and time.monotonic()-t0<timeout:
-        #         new_pos=self.all_motor_status['Position'][axis_num]
-        #         new_status=self.all_motor_status['MoveFlag'][axis_num]
-        #         if abs(set_pos-new_pos)<0.1 and not new_status:
-        #             # motor motion has stoped
-        #             set_flag=False
-        #             set_info="done"
-        #         else:
-        #             pass
-        #     # jump out time
-        #     used_time=time.monotonic() - t0
-        #     print(f"set axis position done after: {used_time:.2f}s with timeout of {timeout}s\n"
-        #         f"average time:{used_time/abs(set_pos-curr_axis_pos):0.3f}")
-        #     #info = [new_pos, set_pos, axis_num, set_info] 
-        # else:
-        #     print(f'Motionmotor not connected')
-        # info = [new_pos, set_pos, axis_num, set_info]
-        # print(info)
-        # return info
     
     @log_exceptions(log_func=logger.error)
     @Slot()
@@ -638,39 +616,6 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         #self.MotorSetThread.done_sig.connect(self.motor_set_done)
         #self.MotorSetThread.start()
     
-    def motor_set_done(self,done_info:list):
-        """_summary_
-        done_info=[new_pos, set_pos, axis_num, set_info]
-        Args:
-            done_info (list): [new_pos, set_pos, axis_num, set_info]
-
-        Returns:
-            _type_: _description_
-        """
-        print(done_info)
-        # axis_num=done_info[0][2]
-        # print(f'set axis {self.all_axis[axis_num]} done with info {done_info}')
-
-
-    @Slot()
-    def ws_connected(self):
-        peerAddress=self.ws_client.peerAddress().toString()
-        peerName=self.ws_client.peerName()
-        peerPort=self.ws_client.peerPort()
-        print(f'connect to ws://{peerAddress}:{peerPort} successful')
-    
-    @Slot()
-    def ws_disconnected(self):
-        peerName=self.ws_client.peerName()
-        peerPort=self.ws_client.peerPort()
-        print(f'localport:{self.ws_client.localPort()}')
-        print(f'disconnect ws://{peerName}:{peerPort} successful')
-
-    @Slot(str)
-    def ws_msgReceived(self,msg:str):
-        #print(f'recevied message:\n{msg}')
-        self.all_motor_status=self.extract_motor_status(msg)
-        self.update_all_motors(self.all_motor_status)
 
     @Slot()
     def on_ConnectWS_btn_clicked(self):
@@ -693,10 +638,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             print(error_info)
         else:
             self.connect_status_flag=True  
-            self.ConnectWS_btn.setText("Motor ON")
-            self.ConnectWS_btn.setStyleSheet(CSS_btn_on)
             
-
     def disconnect_motorws(self,ip:str="127.0.0.1",port=6341):
         try:
             ws_url=QUrl(f'ws://{ip}:{port}')
@@ -708,7 +650,36 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             self.connect_status_flag=False  
             self.ConnectWS_btn.setText("Motor OFF")
             self.ConnectWS_btn.setStyleSheet(CSS_btn_off)
-               
+
+    @Slot()
+    def ws_connected(self):
+        peerAddress=self.ws_client.peerAddress().toString()
+        peerName=self.ws_client.peerName()
+        peerPort=self.ws_client.peerPort()
+        print(f'connect to ws://{peerAddress}:{peerPort} successful')
+        self.ConnectWS_btn.setText("Motor ON")
+        self.ConnectWS_btn.setStyleSheet(CSS_btn_on)
+    
+    @Slot()
+    def ws_disconnected(self):
+        peerName=self.ws_client.peerName()
+        peerPort=self.ws_client.peerPort()
+        print(f'localport:{self.ws_client.localPort()}')
+        print(f'disconnect ws://{peerName}:{peerPort} successful')
+        self.connect_status_flag=False
+        self.ConnectWS_btn.setText("Motor OFF")
+        self.ConnectWS_btn.setStyleSheet(CSS_btn_off) 
+
+    @Slot(str)
+    def ws_msgReceived(self,msg:str):
+        #print(f'recevied message:\n{msg}')
+        # update all motor status
+        self.all_motor_status=self.extract_motor_status(msg)
+        # check if scan motor process is on and set motor is done or not
+        self.check_motor_set_status(self.all_motor_status)
+        # update all motor position
+        self.update_all_motors(self.all_motor_status)
+
     def extract_motor_status(self,motor_msg):
         """show motor status
         motor status:
@@ -751,6 +722,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         self.update_once_flag=True
 
 
+
     """
     end of Montion Motor control by websockets
     """
@@ -766,7 +738,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
     @log_exceptions(log_func=logger.error)
     def ini_MotionMotor_plot__(self):
         #data structure
-        self._plot_ch_list = []
+        self._plot_axis_list = []
         self._plot_pAmeter_list = []
         self._time_stamp = []
         #scan axis info
@@ -774,9 +746,10 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         self.scan_axis_name=self.Scan_Axis_cbx.currentText()
         self.Scan_Axis_cbx.currentIndexChanged['int'].connect(self.set_scan_channel)
         # flag for status 1 is on , 0 is off
-        self._start_plot_flag = 0
-        self._scan_range_set_flag = 0
-        self._scan_motor_ch_flag = 0
+        self._start_plot_flag = 0      # flag for start plot 
+        self._scan_range_set_flag = 0  # flag for set scan range
+        self._scan_motor_axis_flag = 0 # flag for motor scan process
+        self._set_motor_on_flag=False      # flag for motor set is on 
         self._scan_list = []
         self._scan_list_num = 0  # number of scan list
         self._scan_N = 0  # index of scan list
@@ -828,7 +801,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             self.raise_info(f'Next will scan {scan_range_list[0]}, scan range:\n{scan_range_list[-1]},'
                             f' total points: {len(scan_range_list[-1])}, you can start now')
             self._scan_range_set_flag = 1
-            print(self._scan_info)
+            #print(self._scan_info)
             logger.info(f'get scan info: {self._scan_info}')
 
     @log_exceptions(log_func=logger.error)
@@ -845,10 +818,10 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         print(f'start plot={self._start_plot_flag}-set scan range={self._scan_range_set_flag}')
         if self._start_plot_flag == 0 and self._scan_range_set_flag == 1 and isinstance(self._scan_info,list):
             # scan is off
-            print(f'scan channel={self._scan_info[0]}')
+            print(f'scan axis={self._scan_info[0]}')
             scan_axis_num=self.all_axis.index(self._scan_info[0])
             # scan the channel with the scan_list
-            print(f"start scan, Channel:{self._scan_info[0]}, ch_num:{scan_axis_num}")
+            print(f"start scan, axis name:{self._scan_info[0]}, axis_num:{scan_axis_num}")
             self.scan_axis_pA(scan_axis_num,self._scan_info[-1])
         else:
             # scan is already on, can not start
@@ -871,7 +844,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         """scan one channel and plot
         """
         self._start_plot_flag=1
-        self._scan_motor_ch_flag=1
+        self._scan_motor_axis_flag=1
         if axis_num and isinstance(range_list,list):
             self.scan_axis_num=axis_num
             # set up time hint
@@ -891,18 +864,235 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
     def start_axis_pA_set(self, cmd: list):
         if cmd[0] == 'OK':
             # set axis position
-            #self.pmc_motor.set_pos(str(self.scan_ch_num),self._scan_list[self._scan_N])
-            #self.pmcsetQThread = pmcSetThread(self.pmc_motor,ch_num=self.scan_ch_num, pos=self._scan_list[self._scan_N],num=1)
-            self.pmcsetQThread.done_signal.connect(self.pmc_set_done)
-            self.pmcsetQThread.start()
+            self._set_motor_on_flag=True
+            # check later
+            self.axis_set_pos=self._scan_list[cmd[1]] # latest set position for scan axis
+            self.set_motor_position(axis_num=self.scan_axis_num,set_pos=self.axis_set_pos)
 
+    def check_motor_set_status(self,motors_status:dict):
+        """check if motor scan process is on and set motor is done 
+        """
+        if self._set_motor_on_flag and self._scan_motor_axis_flag:
+            # motor set process is on
+            curr_scan_axis_pos=self.all_motor_status['Position'][self.scan_axis_num]
+            curr_scan_axis_status=self.all_motor_status['MoveFlag'][self.scan_axis_num]
+            if abs(curr_scan_axis_pos-self.set_pos)<0.01 and not curr_scan_axis_status:
+                # set motor position done and motor stopped(motor status=False),emit signal
+                info=[curr_scan_axis_pos, self.axis_set_pos, self.scan_axis_num, "OK"]
+                self.set_motor_done_sig.emit(info)
+                self._set_motor_on_flag=False
+
+    @Slot(list)
+    def motor_set_done(self,done_info:list):
+        """_summary_
+        done_info=[final_pos, set_pos, axis_num, set_info]
+        Args:
+            done_info (list): [new_pos, set_pos, axis_num, set_info]
+
+        Returns:
+            _type_: _description_
+        """
+        
+        print(f'set axis {self.all_axis[self.scan_axis_num]} done with info {done_info}')
+        # save the real read-back value for plot
+        self._plot_axis_list.append(done_info[0])
+        # start read pAmeter
+        self.thread_pAmeter6514 = Keithley6514Com(port=self.serial_port, func='currents', points=5,full_time=100,keep_on=0)
+        self.thread_pAmeter6514.data_sig.connect(self.get_scan_pA_data)
+        if done_info[-1]=="OK":
+            self.thread_pAmeter6514.start()
+
+    @log_exceptions(log_func=logger.error)
+    @Slot(list)
+    def get_scan_pA_data(self, data: list):
+        print(f'get data: {data}')
+        if isinstance(data, list):
+            current = data[0]
+            self._scan_N += 1
+            self._plot_pAmeter_list.append(current)
+            scan_axis_name=self.all_axis[self.scan_axis_num]
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            self._time_stamp.append(timestamp)
+            # plot scan data
+            self.plot_scan_data(self._plot_axis_list, self._plot_pAmeter_list, f'{scan_axis_name}', 'Currents(A)')
+            if self._scan_N < self._scan_list_num:
+                self.scan_start_sig.emit(['OK', self._scan_N])
+                self.set_progress_Bar(int(100*self._scan_N/self._scan_list_num))
+            else:
+                print('all position in list have been set')
+                full_data =self.get_full_data()
+                t_stamp = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
+                self._save_N += 1
+                filename = f'{self.username}_{scan_axis_name}_scan_data_{t_stamp}_{self._save_N}'
+                folder = time.strftime('%Y-%m-%d', time.localtime())
+                save_folder = createPath(os.path.join(save_path, folder))
+                self.save_scan_data(full_data, save_folder, filename)
+                # show done time
+                self.set_progress_Bar(100)
+                done_stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                self.Done_time.setText(f'Finished at:{done_stamp}')
+                self.scan_start_sig.disconnect(self.start_axis_pA_set)
+                self._scan_motor_axis_flag = 0
+                self._start_plot_flag = 0
 
     """
     end of Motor pos vs I_PD plot part
     """
     # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
 
+
     # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
+    """
+    plot and data save part
+    """
+
+    def plot_scan_data(self, x_list: list, y_list: list, x_name: str, y_name: str):
+        """
+        plot any x_list and y_list data,and set the Axis name x_name,y_name
+        :param x_list:
+        :param y_list:
+        :param x_name:
+        :param y_name:
+        :return:
+        """
+        # plot
+        self.figure.axes.cla()
+        self.figure.axes.plot(x_list, y_list, marker='o', markersize=3, markerfacecolor='orchid',
+                              markeredgecolor='orchid', linestyle='-', color='c')
+        self.figure.axes.set_xlabel(x_name, fontsize=18, color='#20B2AA')
+        self.figure.axes.set_ylabel(y_name, fontsize=18, color='#20B2AA')
+        self.figure.draw()
+
+    # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
+    # """
+    # data save part
+    # """
+
+    def get_full_data(self):
+        """
+        get the full scan data and return
+        :return: full valid scan data(not empty) in dict form
+        """
+        valid_full_data = dict()
+        scan_axis_name=self.all_axis[self.scan_axis_num]
+        temp_full_data = {scan_axis_name: self._plot_axis_list,  'current(pA)': self._plot_pAmeter_list,
+                          'time_stamp': self._time_stamp, 'scan set': self._scan_list}
+        # get the valid scan data (not empty)
+        for key, value in temp_full_data.items():
+            if value:
+                valid_full_data[key] = value
+        return valid_full_data
+
+    # clear all data
+    @log_exceptions(log_func=logger.error)
+    def clear_all_data(self):
+        """
+        clear all previous scan data
+        :return:
+        """
+        scan_axis_name=self.all_axis[self.scan_axis_num]
+        temp_full_data = {scan_axis_name: self._plot_axis_list,  'current(pA)': self._plot_pAmeter_list,
+                          'time_stamp': self._time_stamp, 'scan set': self._scan_list}
+        
+        self._plot_axis_list = []
+        self._plot_pAmeter_list = []
+        self._scan_list = []
+        self._time_stamp = []
+        self._scan_N = 0
+
+    # save scan data
+    def save_scan_data(self, full_data: dict, path, filename):
+        """
+        save the full data into several file form [dict] form
+        :param filename: filename without extension
+        :param path: filepath
+        :param full_data: {'counts':[list],'Energy':[list]....}
+        :return:
+        """
+        if full_data and os.path.isdir(path):
+            #dict_to_csv(full_data, path, filename + '.csv')
+            dict_to_excel(full_data, path, filename + '.xlsx')
+            #dict_to_json(full_data, path, filename + '.json')
+            dict_to_SQLTable(full_data,filename, SQLiteDB_path, 'ALLScanData.db')
+            QMessageBox.information(self, 'save file', f'full data have been saved to {path}', QMessageBox.Yes)
+
+    def usr_save_full_data(self, full_data: dict, path: str, usrname='usr_test', usr_define: int = 1):
+        """
+        check all the data acquired now,save all valid data
+        :param usrname: usr defined filename
+        :param path: filepath
+        :param filename: filename without extension
+        :param usr_define: usr define save path and filename->1=yes,0=no
+        :return:
+        """
+        t_stamp = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
+        self._save_N += 1
+        filename = usrname + t_stamp + str(self._save_N)
+        usr_path = path if os.path.isdir(path) else save_path
+        print(filename, usr_path)
+        # save scan data
+        if full_data:
+            if usr_define == 1:
+                file_in_path, filetype = QFileDialog.getSaveFileName(self, 'save file', usr_path, 'xlsx(*.xlsx)')
+                usr_path = os.path.dirname(file_in_path)
+                usr_file = os.path.basename(file_in_path)
+                filename = usr_file.split('.')[0]
+            self.save_scan_data(full_data, usr_path, filename)
+        else:
+            if usr_define == 1:
+                self.raise_info(f'No data to save')
+            else:
+                pass
+
+    # # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
+    # """
+    # stop clear data set
+    # """
+
+    @log_exceptions(log_func=logger.error)
+    @Slot()
+    def on_Stop_plot_clicked(self):
+        """
+        stop scan disconnect start_scan signal
+        :return:
+        """
+        try:
+            if self._start_plot_flag == 0:
+                self.raise_info('nothing to stop')
+            if self._scan_motor_axis_flag == 1:
+                self.scan_start_sig.disconnect(self.start_axis_pA_set)
+                self._scan_motor_axis_flag = 0
+        except Exception as e:
+            print(e)
+            logger.error(traceback.format_exc() + str(e))
+        else:
+            # the scan process has stopped
+            self._start_plot_flag = 0
+            # save data
+            scan_data = self.get_full_data()
+            folder = time.strftime('%Y-%m-%d', time.localtime())
+            save_folder = createPath(os.path.join(save_path, folder))
+            self.usr_save_full_data(scan_data, path=save_folder, usr_define=1)
+
+    @log_exceptions(log_func=logger.error)
+    @Slot()
+    def on_Clear_Save_clicked(self):
+        """
+        check if any scan is running, if not ,save data then clear all data
+        :return:
+        """
+         
+        if self._scan_motor_axis_flag == 0:
+            # clear figure
+            self.figure.axes.cla()
+            self.figure.draw()
+            # save data
+            scan_data = self.get_full_data()
+            self.usr_save_full_data(scan_data, save_path, usr_define=1)
+            self.clear_all_data()
+        else:
+            self.raise_warning('scan is on, can not clear')
+
 
     # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
     """close event
