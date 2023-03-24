@@ -602,19 +602,19 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             self.ws_client.sendTextMessage(move_msg)
             
     
-    @log_exceptions(log_func=logger.error)
-    @Slot()
-    def on_Clear_Save_clicked(self):
-        axis_num=0
-        set_pos=10
-        #axis_name=self.all_axis[axis_num]
-        #self.axis_target_input[axis_name].setValue(set_pos)
-        #self.move_axis_motor(axis_name)
-        print(f'set axis{self.all_axis[axis_num]} to {set_pos}')
-        self.set_motor_position(axis_num,set_pos)
-        #self.MotorSetThread=MotionMotorWsThread(axis_num,set_pos)
-        #self.MotorSetThread.done_sig.connect(self.motor_set_done)
-        #self.MotorSetThread.start()
+    # @log_exceptions(log_func=logger.error)
+    # @Slot()
+    # def on_Clear_Save_clicked(self):
+    #     axis_num=0
+    #     set_pos=10
+    #     #axis_name=self.all_axis[axis_num]
+    #     #self.axis_target_input[axis_name].setValue(set_pos)
+    #     #self.move_axis_motor(axis_name)
+    #     print(f'set axis{self.all_axis[axis_num]} to {set_pos}')
+    #     self.set_motor_position(axis_num,set_pos)
+    #     #self.MotorSetThread=MotionMotorWsThread(axis_num,set_pos)
+    #     #self.MotorSetThread.done_sig.connect(self.motor_set_done)
+    #     #self.MotorSetThread.start()
     
 
     @Slot()
@@ -845,6 +845,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         """
         self._start_plot_flag=1
         self._scan_motor_axis_flag=1
+        self.set_motor_done_sig.connect(self.motor_set_done)
         if axis_num and isinstance(range_list,list):
             self.scan_axis_num=axis_num
             # set up time hint
@@ -932,6 +933,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
                 done_stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 self.Done_time.setText(f'Finished at:{done_stamp}')
                 self.scan_start_sig.disconnect(self.start_axis_pA_set)
+                self.set_motor_done_sig.disconnect(self.motor_set_done)
                 self._scan_motor_axis_flag = 0
                 self._start_plot_flag = 0
 
@@ -1061,7 +1063,9 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
                 self.raise_info('nothing to stop')
             if self._scan_motor_axis_flag == 1:
                 self.scan_start_sig.disconnect(self.start_axis_pA_set)
+                self.set_motor_done_sig.disconnect(self.motor_set_done)
                 self._scan_motor_axis_flag = 0
+                self._set_motor_on_flag=False
         except Exception as e:
             print(e)
             logger.error(traceback.format_exc() + str(e))
