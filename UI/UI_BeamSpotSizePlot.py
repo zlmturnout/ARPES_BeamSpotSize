@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'UI_BeamSpotSizePlot.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.0
+## Created by: Qt User Interface Compiler version 6.3.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -97,8 +97,10 @@ class Ui_MainWindow(object):
         font.setBold(True)
         self.Msg_box_2.setFont(font)
         self.Msg_box_2.setStyleSheet(u"")
-        self.Msg_box_2.setFrameShape(QFrame.Box)
-        self.Msg_box_2.setFrameShadow(QFrame.Raised)
+        self.Msg_box_2.setFrameShape(QFrame.Panel)
+        self.Msg_box_2.setFrameShadow(QFrame.Sunken)
+        self.Msg_box_2.setLineWidth(1)
+        self.Msg_box_2.setMidLineWidth(1)
 
         self.verticalLayout_2.addWidget(self.Msg_box_2)
 
@@ -132,9 +134,9 @@ class Ui_MainWindow(object):
         self.ConnectWS_btn.setMinimumSize(QSize(160, 40))
         self.ConnectWS_btn.setMaximumSize(QSize(250, 16777215))
         self.ConnectWS_btn.setFont(font1)
-        self.ConnectWS_btn.setStyleSheet(u"background-color: rgb(255, 109, 60);\n"
-"selection-color: rgb(255, 85, 127);\n"
-"color: rgb(255, 255, 255);")
+        self.ConnectWS_btn.setStyleSheet(u"QPushButton{background-color: rgb(0, 170, 127);selection-color: rgb(255, 85, 127);color: rgb(255, 255, 255);}\n"
+"QPushButton:hover{background-color:rgb(255, 91, 58);selection-color: rgb(255, 85, 127);color: rgb(255, 255, 255);}\n"
+"QPushButton:pressed{background-color:rgb(255, 91, 58);color: rgb(255, 255, 255);}")
 
         self.horizontalLayout.addWidget(self.ConnectWS_btn)
 

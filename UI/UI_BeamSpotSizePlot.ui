@@ -152,10 +152,16 @@
              <string notr="true"/>
             </property>
             <property name="frameShape">
-             <enum>QFrame::Box</enum>
+             <enum>QFrame::Panel</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Sunken</enum>
+            </property>
+            <property name="lineWidth">
+             <number>1</number>
+            </property>
+            <property name="midLineWidth">
+             <number>1</number>
             </property>
             <property name="html">
              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -242,9 +248,9 @@ hr { height: 1px; border-width: 0; }
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 109, 60);
-selection-color: rgb(255, 85, 127);
-color: rgb(255, 255, 255);</string>
+               <string notr="true">QPushButton{background-color: rgb(0, 170, 127);selection-color: rgb(255, 85, 127);color: rgb(255, 255, 255);}
+QPushButton:hover{background-color:rgb(255, 91, 58);selection-color: rgb(255, 85, 127);color: rgb(255, 255, 255);}
+QPushButton:pressed{background-color:rgb(255, 91, 58);color: rgb(255, 255, 255);}</string>
               </property>
               <property name="text">
                <string>MotionMotor</string>
@@ -2211,8 +2217,7 @@ QPushButton:hover{background-color:rgb(255, 102, 42);}</string>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">
-</string>
+           <string notr="true"/>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Plain</enum>

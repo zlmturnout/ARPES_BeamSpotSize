@@ -122,7 +122,7 @@ def gaussian(x, amp, cen, wid):
     return (amp / (sqrt(2*pi) * wid)) * exp(-(x-cen)**2 / (2*wid**2))
 
 
-def GaussianFit(x,y,center=1200,info:str='GaussFit'):
+def GaussianFit(x,y,center=1200,info:str='GaussFit',amplitude=10):
     """find FWHM from the imported array data [x,y]
 
     Args:
@@ -135,7 +135,7 @@ def GaussianFit(x,y,center=1200,info:str='GaussFit'):
     """
     Fit_results={}
     gmodel = Model(gaussian)
-    result = gmodel.fit(y, x=x, amp=4006, cen=center, wid=2.6)
+    result = gmodel.fit(y, x=x, amp=amplitude, cen=center, wid=2.6)
     #print(result.values)
     #print(result.fit_report())
     wid_fit=result.params['wid'].value

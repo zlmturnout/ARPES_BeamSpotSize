@@ -231,7 +231,7 @@ class DataViewPlot(QDialog, Ui_Dialog):
                 X_list = self.dict_data.get(X_axis)
                 Y_list = self.dict_data.get(Y_axis)
                 #print(X_list, Y_list)
-                derv_y2, derv_x2 = interp_derivative(X_list, Y_list, 100, X_axis, Y_axis)
+                derv_y2, derv_x2 = interp_derivative(X_list, Y_list, 10, X_axis, Y_axis)
                 self.plot_scan_data(derv_x2, derv_y2, X_axis, '1st deriv by interp')
                 # another method
                 derv_y1,derv_x1=cal_deriv(X_list,Y_list,X_axis,Y_axis)
@@ -239,16 +239,18 @@ class DataViewPlot(QDialog, Ui_Dialog):
                 
                 x1_fit=np.array(derv_x1)
                 y1_fit=np.array(derv_y1)
+                amplitude1=np.sum(y1_fit)
                 mid_index1=round(len(x1_fit)/2)
                 x2_fit=np.array(derv_x2)
                 y2_fit=np.array(derv_y2)
+                amplitude2=np.sum(y2_fit)
                 mid_index2=round(len(x2_fit)/2)
                 if np.sum(y1_fit)>0:
-                    Fit_result1,FWHM1=GaussianFit(x1_fit,y1_fit,center=x1_fit[mid_index1])
-                    Fit_result2,FWHM1=GaussianFit(x2_fit,y2_fit,center=x2_fit[mid_index2])
+                    Fit_result1,FWHM1=GaussianFit(x1_fit,y1_fit,center=x1_fit[mid_index1],amplitude=amplitude1)
+                    Fit_result2,FWHM1=GaussianFit(x2_fit,y2_fit,center=x2_fit[mid_index2],amplitude=amplitude2)
                 else:
-                    Fit_result1,FWHM1=GaussianFit(x1_fit,-y1_fit,center=x1_fit[mid_index1])
-                    Fit_result2,FWHM1=GaussianFit(x2_fit,-y2_fit,center=x2_fit[mid_index2])
+                    Fit_result1,FWHM1=GaussianFit(x1_fit,-y1_fit,center=x1_fit[mid_index1],amplitude=amplitude1)
+                    Fit_result2,FWHM1=GaussianFit(x2_fit,-y2_fit,center=x2_fit[mid_index2],amplitude=amplitude2)
                 plot_Gaussfit_line(Fit_result1,self.save_folder,self.filename+'direct',title='direct')
                 plot_Gaussfit_line(Fit_result2,self.save_folder,self.filename+'interplote',title='quadraticinterplote')
                 

@@ -442,9 +442,9 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             # plot
             self.pAmeter_figure.axes.cla()
             self.pAmeter_figure.axes.plot(plot_delay, plot_read, '-oc', markersize=1)
-            self.pAmeter_figure.axes.set_title("pAmeter read", fontsize=10, color='m')
-            self.pAmeter_figure.axes.set_xlabel("Delay(s)", fontsize=10, color='m')
-            self.pAmeter_figure.axes.set_ylabel("currents value", fontsize=10, color='m')
+            self.pAmeter_figure.axes.set_title("pAmeter read", fontsize=20, color='m')
+            self.pAmeter_figure.axes.set_xlabel("Delay(s)", fontsize=20, color='m')
+            self.pAmeter_figure.axes.set_ylabel("currents value", fontsize=20, color='m')
             self.pAmeter_figure.draw()
 
     def lcd_display(self,current):
@@ -755,7 +755,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         self._scan_N = 0  # index of scan list
         self._save_file_flag = 0
         self._save_N = 0  # index for save order
-        self.scan_axis_num=None
+        self.scan_axis_num=0
         self._scan_info=None
         
     @log_exceptions(log_func=logger.error)
@@ -843,10 +843,12 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
     def scan_axis_pA(self,axis_num,range_list:list):
         """scan one channel and plot
         """
+        print(f'now scan:{axis_num} with position list{range_list} ')
         self._start_plot_flag=1
         self._scan_motor_axis_flag=1
         self.set_motor_done_sig.connect(self.motor_set_done)
-        if axis_num and isinstance(range_list,list):
+        self.scan_start_sig.connect(self.start_axis_pA_set)
+        if isinstance(range_list,list):
             self.scan_axis_num=axis_num
             # set up time hint
             EP_Time = len(range_list) * 6.0
@@ -856,7 +858,6 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             self._scan_list = range_list
             self._scan_list_num = len(range_list)
             self._scan_N = 0
-            self.scan_start_sig.connect(self.start_axis_pA_set)
             self.scan_start_sig.emit(['OK', self._scan_N])
 
 
@@ -877,7 +878,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             # motor set process is on
             curr_scan_axis_pos=self.all_motor_status['Position'][self.scan_axis_num]
             curr_scan_axis_status=self.all_motor_status['MoveFlag'][self.scan_axis_num]
-            if abs(curr_scan_axis_pos-self.set_pos)<0.01 and not curr_scan_axis_status:
+            if abs(curr_scan_axis_pos-self.axis_set_pos)<0.01 and not curr_scan_axis_status:
                 # set motor position done and motor stopped(motor status=False),emit signal
                 info=[curr_scan_axis_pos, self.axis_set_pos, self.scan_axis_num, "OK"]
                 self.set_motor_done_sig.emit(info)
@@ -915,7 +916,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             self._time_stamp.append(timestamp)
             # plot scan data
-            self.plot_scan_data(self._plot_axis_list, self._plot_pAmeter_list, f'{scan_axis_name}', 'Currents(A)')
+            self.plot_scan_data(self._plot_axis_list, self._plot_pAmeter_list, f'{scan_axis_name}/mm', 'Currents(A)')
             if self._scan_N < self._scan_list_num:
                 self.scan_start_sig.emit(['OK', self._scan_N])
                 self.set_progress_Bar(int(100*self._scan_N/self._scan_list_num))
@@ -961,8 +962,8 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         self.figure.axes.cla()
         self.figure.axes.plot(x_list, y_list, marker='o', markersize=3, markerfacecolor='orchid',
                               markeredgecolor='orchid', linestyle='-', color='c')
-        self.figure.axes.set_xlabel(x_name, fontsize=18, color='#20B2AA')
-        self.figure.axes.set_ylabel(y_name, fontsize=18, color='#20B2AA')
+        self.figure.axes.set_xlabel(x_name, fontsize=20, color='#20B2AA')
+        self.figure.axes.set_ylabel(y_name, fontsize=20, color='#20B2AA')
         self.figure.draw()
 
     # **************************************LIMIN_Zhou_at_SSRF_BL20U**************************************
