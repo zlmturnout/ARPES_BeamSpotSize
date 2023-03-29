@@ -550,6 +550,7 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
         """initialize all axis info
         """
         #preset all motor status
+        self.set_axisMove_range()
         self.update_once_flag=False
         self.all_axis=["X","Y","Z","R1","R2","R3"]
         self.all_motor_status={'Position': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'MoveFlag': [False, False, False, False, False, False], 
@@ -721,6 +722,28 @@ class BeamSpotScanControl(QMainWindow,Ui_MainWindow):
                 self.axis_move_btns[axis].setStyleSheet(CSS_btn_stay)
         self.update_once_flag=True
 
+    def set_axisMove_range(self):
+        """set the min max stepsize of X Y Z R1 R2 R3
+        """
+        self.X_SpinBox.setMinimum(-12.0)
+        self.X_SpinBox.setMaximum(12.0)
+        self.X_SpinBox.setSingleStep(0.1)
+        self.Y_SpinBox.setMinimum(-12.0)
+        self.Y_SpinBox.setMaximum(12.0)
+        self.Y_SpinBox.setSingleStep(0.1)
+        self.Z_SpinBox.setMinimum(0.5)
+        self.Z_SpinBox.setMaximum(495.0)
+        self.Z_SpinBox.setSingleStep(0.1)
+        # R1 R2 R3 degree settings
+        self.R1_SpinBox.setMinimum(0.0)
+        self.R1_SpinBox.setMaximum(360.0)
+        self.R1_SpinBox.setSingleStep(1)
+        self.R2_SpinBox.setMinimum(-12)
+        self.R2_SpinBox.setMaximum(27)
+        self.R2_SpinBox.setSingleStep(0.1)
+        self.R3_SpinBox.setMinimum(0.0)
+        self.R3_SpinBox.setMaximum(240)
+        self.R3_SpinBox.setSingleStep(1)
 
 
     """
